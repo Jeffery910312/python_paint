@@ -85,7 +85,7 @@ class PaintApp:
         mask = np.zeros((canvas_image.shape[0] + 2, canvas_image.shape[1] + 2), dtype=np.uint8)
 
         # 将填充颜色转换为OpenCV格式
-        new_fill_color = tuple(int(fill_color[i:i+2], 16) for i in (5, 3, 1))  # 将十六进制颜色转换为BGR格式
+        new_fill_color = tuple(int(fill_color[i:i+2], 16) for i in (5, 3, 1))  
 
         
         
