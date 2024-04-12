@@ -128,7 +128,7 @@ class PaintApp:
         self.is_pen = True
         self.is_eraser = False
         self.is_fill_mode = False
-        self.is_fill_mode
+
         
     def choose_erase(self):
         self.canvas.config(cursor="dot") 
