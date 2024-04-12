@@ -68,24 +68,12 @@ class PaintApp:
 
     def fill_color_at_click(self, event):
         if self.is_fill_mode:
-            x, y = self.mouse_click_to_canvas_coords(event)
+            x, y = event.x , event.y
             fill_color = self.pen_color  # 填充颜色为当前画笔颜色
             self.paint_bucket(x, y, fill_color)
             print("Mouse click coordinates (x, y):", x, y)
 
-    def mouse_click_to_canvas_coords(self, event):
-        # 获取鼠标点击的坐标
-        x_raw, y_raw = event.x, event.y
-        # 获取绘图区域的大小
-        canvas_width = self.canvas.winfo_width()
-        canvas_height = self.canvas.winfo_height()
-        # 计算绘图区域中鼠标点击的相对位置
-        x_canvas = int(x_raw * (canvas_width / self.canvas.winfo_reqwidth()))
-        y_canvas = int(y_raw * (canvas_height / self.canvas.winfo_reqheight()))
-        # 返回转换后的坐标
-        print(x_raw)
-        print(x_canvas)
-        return x_canvas, y_canvas
+
 
 
 
@@ -97,7 +85,10 @@ class PaintApp:
         mask = np.zeros((canvas_image.shape[0] + 2, canvas_image.shape[1] + 2), dtype=np.uint8)
 
         # 将填充颜色转换为OpenCV格式
-        new_fill_color = tuple(int(fill_color[i:i+2], 16) for i in (1, 3, 5))  # 将十六进制颜色转换为BGR格式
+        new_fill_color = tuple(int(fill_color[i:i+2], 16) for i in (5, 3, 1))  # 将十六进制颜色转换为BGR格式
+
+        
+        
 
         # 确保种子点在图像范围内
         if 0 <= x < canvas_image.shape[1] and 0 <= y < canvas_image.shape[0]:
