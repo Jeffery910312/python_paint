@@ -2,9 +2,11 @@ import tkinter as tk
 from tkinter import colorchooser
 from tkinter import filedialog
 from PIL import Image
+from collections import deque
 import cv2
 import numpy as np
 import io
+
 
 
 class PaintApp:
@@ -12,7 +14,7 @@ class PaintApp:
         self.root = root
         self.root.title("Python小畫家")
         
-        self.pen_color = "black"
+        self.pen_color = "#000000"
         self.pen_size = 2
         self.is_pen = True
         self.is_eraser = False
@@ -64,34 +66,58 @@ class PaintApp:
         self.canvas.config(cursor="target")  # 更改鼠标样式
         self.canvas.bind("<Button-1>", self.fill_color_at_click)  # 绑定填充功能
 
-
     def fill_color_at_click(self, event):
         if self.is_fill_mode:
-            x, y = event.x, event.y
-            fill_color = self.pen_color  # 或者是你想要的填充颜色
+            x, y = self.mouse_click_to_canvas_coords(event)
+            fill_color = self.pen_color  # 填充颜色为当前画笔颜色
             self.paint_bucket(x, y, fill_color)
+            print("Mouse click coordinates (x, y):", x, y)
+
+    def mouse_click_to_canvas_coords(self, event):
+        # 获取鼠标点击的坐标
+        x_raw, y_raw = event.x, event.y
+        # 获取绘图区域的大小
+        canvas_width = self.canvas.winfo_width()
+        canvas_height = self.canvas.winfo_height()
+        # 计算绘图区域中鼠标点击的相对位置
+        x_canvas = int(x_raw * (canvas_width / self.canvas.winfo_reqwidth()))
+        y_canvas = int(y_raw * (canvas_height / self.canvas.winfo_reqheight()))
+        # 返回转换后的坐标
+        print(x_raw)
+        print(x_canvas)
+        return x_canvas, y_canvas
+
 
 
     def paint_bucket(self, x, y, fill_color):
-        target_color = self.canvas.itemcget(self.canvas.find_closest(x, y), "fill")
+        # 将画布内容转换为OpenCV格式
+        canvas_image = self.get_canvas_image()
 
-        if target_color == fill_color:
-            return
+        # 创建掩码
+        mask = np.zeros((canvas_image.shape[0] + 2, canvas_image.shape[1] + 2), dtype=np.uint8)
 
-        stack = [(x, y)]
+        # 将填充颜色转换为OpenCV格式
+        new_fill_color = tuple(int(fill_color[i:i+2], 16) for i in (1, 3, 5))  # 将十六进制颜色转换为BGR格式
 
-        while stack:
-            current_x, current_y = stack.pop()
+        # 确保种子点在图像范围内
+        if 0 <= x < canvas_image.shape[1] and 0 <= y < canvas_image.shape[0]:
+            # 如果鼠标点击坐标在图像范围内，直接使用该坐标作为种子点
+            seed_point = (x, y)
+        else:
+            # 如果鼠标点击坐标超出了图像范围，调整种子点的位置
+            adjusted_x = max(0, min(x, canvas_image.shape[1] - 1))
+            adjusted_y = max(0, min(y, canvas_image.shape[0] - 1))
+            seed_point = (adjusted_x, adjusted_y)
 
-            current_color = self.canvas.itemcget(self.canvas.find_closest(current_x, current_y), "fill")
+        lo_diff = up_diff = (0, 0, 0)
+        # 执行泛洪填充算法
+        _, filled_image, _, _ = cv2.floodFill(canvas_image, mask, seed_point, new_fill_color, lo_diff, up_diff)
+        # 显示填充后的图像
+        filled_image = cv2.resize(filled_image, (self.canvas.winfo_width(), self.canvas.winfo_height()))
+        self.show_image(filled_image)
 
-            if current_color == target_color:
-                self.canvas.itemconfig(self.canvas.find_closest(current_x, current_y), fill=fill_color)
 
-                stack.append((current_x + 1, current_y))  # Right
-                stack.append((current_x - 1, current_y))  # Left
-                stack.append((current_x, current_y + 1))  # Down
-                stack.append((current_x, current_y - 1))  # Up
+
 
 
 
@@ -139,9 +165,11 @@ class PaintApp:
         # 清除 Canvas 上的內容
         self.canvas.delete("all")
 
+        # 将 OpenCV 格式的图像转换为 PhotoImage
         image_bytes = cv2.imencode('.png', image)[1].tobytes()
         self.image_tk = tk.PhotoImage(data=image_bytes)
 
+        # 在 Canvas 上显示图像
         self.canvas.create_image(0, 0, anchor=tk.NW, image=self.image_tk)
 
         
