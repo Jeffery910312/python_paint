@@ -1,8 +1,6 @@
 import tkinter as tk
 from tkinter import colorchooser
 from tkinter import filedialog
-from PIL import Image ,ImageGrab
-from collections import deque
 import cv2
 import numpy as np
 import pyautogui
