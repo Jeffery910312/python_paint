@@ -1,13 +1,11 @@
 import tkinter as tk
 from tkinter import colorchooser
 from tkinter import filedialog
-from PIL import Image
+from PIL import Image ,ImageGrab
 from collections import deque
 import cv2
 import numpy as np
-import io
-
-
+import pyautogui
 
 class PaintApp:
     def __init__(self, root):
@@ -33,11 +31,11 @@ class PaintApp:
         self.erase_btn = tk.Button(self.root, text="橡皮擦", command=self.choose_erase)
         self.erase_btn.pack(side=tk.LEFT)
 
-        self.load_btn = tk.Button(self.root, text="加載", command=self.load_image)
-        self.load_btn.pack(side=tk.LEFT)
-
         self.save_btn = tk.Button(self.root, text="保存", command=self.save_image)
-        self.save_btn.pack(side=tk.LEFT)
+        self.save_btn.pack(side=tk.RIGHT)
+
+        self.load_btn = tk.Button(self.root, text="加載", command=self.load_image)
+        self.load_btn.pack(side=tk.RIGHT)
         
         self.color_btn = tk.Button(self.root, text="填色", command=self.toggle_fill_mode)
         self.color_btn.pack(side=tk.LEFT)
@@ -52,6 +50,12 @@ class PaintApp:
         self.clear_btn.pack(side=tk.LEFT)
 
         self.clear_btn = tk.Button(self.root, text="Canny", command=self.apply_canny)
+        self.clear_btn.pack(side=tk.LEFT)
+
+        self.clear_btn = tk.Button(self.root, text="Sepia", command=self.apply_Speia)
+        self.clear_btn.pack(side=tk.LEFT)
+
+        self.clear_btn = tk.Button(self.root, text="Emboss", command=self.apply_Emboss)
         self.clear_btn.pack(side=tk.LEFT)
         
         
@@ -72,7 +76,6 @@ class PaintApp:
             fill_color = self.pen_color  # 填充颜色为当前画笔颜色
             self.paint_bucket(x, y, fill_color)
             print("Mouse click coordinates (x, y):", x, y)
-
 
 
 
@@ -104,7 +107,6 @@ class PaintApp:
         # 执行泛洪填充算法
         _, filled_image, _, _ = cv2.floodFill(canvas_image, mask, seed_point, new_fill_color, lo_diff, up_diff)
         # 显示填充后的图像
-        filled_image = cv2.resize(filled_image, (self.canvas.winfo_width(), self.canvas.winfo_height()))
         self.show_image(filled_image)
 
 
@@ -171,17 +173,32 @@ class PaintApp:
         
     def change_size(self, val):
         self.pen_size = int(val)
+  
 
     def get_canvas_image(self):
-        # 获取画布上的内容并转换为图像
-        canvas_image = self.canvas.postscript(colormode="color")
-        image = Image.open(io.BytesIO(canvas_image.encode("utf-8")))
-        image = np.array(image)
+        # 获取画布左上角相对于程序窗口左上角的坐标
+        canvas_x0 = 0  # 画布在程序窗口中的左上角 x 坐标
+        canvas_y0 = 0  # 画布在程序窗口中的左上角 y 坐标
 
-        # 将图像从BGR格式转换为RGB格式
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        
-        return image_rgb
+        # 获取画布的宽度和高度
+        canvas_width = self.canvas.winfo_width()
+        canvas_height = self.canvas.winfo_height()
+
+        # 在截图时使用相对于屏幕左上角的边界框参数
+        x0 = self.canvas.winfo_rootx() + canvas_x0
+        y0 = self.canvas.winfo_rooty() + canvas_y0
+
+        # 截取画布区域的截图
+        screenshot = pyautogui.screenshot(region=(x0, y0, canvas_width, canvas_height))
+
+        # 将截图转换为 numpy 数组，并转换为 RGB 格式
+        canvas_image = np.array(screenshot)
+        canvas_image_rgb = cv2.cvtColor(canvas_image, cv2.COLOR_BGR2RGB)
+
+        return canvas_image_rgb
+
+
+
     
     def apply_gaussian_blur(self, kernel_size=(5, 5)):
         # 获取画布上的内容并转换为图像
@@ -205,10 +222,34 @@ class PaintApp:
         # 对灰度图应用Canny边缘检测
         edges = cv2.Canny(gray_image, 50, 150)  # 50和150是Canny算法中的低阈值和高阈值
 
-        resized_edges = cv2.resize(edges, (self.canvas.winfo_width(), self.canvas.winfo_height()))
+        self.show_image(edges)
+    
+    def apply_Speia(self):
+        canvas_image = self.get_canvas_image()
 
+        # SEPIA效果
+        sepia_matrix = np.array([[0.393, 0.769, 0.189],
+                                [0.349, 0.686, 0.168],
+                                [0.272, 0.534, 0.131]])
+        
+        sepia_image = cv2.transform(canvas_image, sepia_matrix)
 
-        self.show_image(resized_edges)
+        self.show_image(sepia_image)
+
+    def apply_Emboss(self):
+        canvas_image = self.get_canvas_image()
+
+        # 将图像转换为灰度图像
+        gray_image = cv2.cvtColor(canvas_image, cv2.COLOR_BGR2GRAY)
+
+        # EMBOSS效果
+        emboss_kernel = np.array([[0, -1, -1],
+                                [1, 0, -1],
+                                [1, 1, 0]])
+        
+        emboss_image = cv2.filter2D(gray_image, -1, emboss_kernel)
+
+        self.show_image(emboss_image)
 
 
 
