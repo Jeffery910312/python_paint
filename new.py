@@ -1,8 +1,11 @@
 import tkinter as tk
 from tkinter import colorchooser
 from tkinter import filedialog
+from PIL import Image
 import cv2
 import numpy as np
+import io
+
 
 class PaintApp:
     def __init__(self, root):
@@ -11,12 +14,16 @@ class PaintApp:
         
         self.pen_color = "black"
         self.pen_size = 2
+        self.is_pen = True
         self.is_eraser = False
+        self.is_fill_mode = False 
+        
         
         self.canvas = tk.Canvas(self.root, bg="white", width=600, height=400)
         self.canvas.pack(fill=tk.BOTH, expand=True)
         
         self.canvas.bind("<B1-Motion>", self.draw)
+        self.canvas.config(cursor="pencil") 
 
         self.pen_btn = tk.Button(self.root, text="筆", command=self.choose_pen)
         self.pen_btn.pack(side=tk.LEFT)
@@ -30,7 +37,7 @@ class PaintApp:
         self.save_btn = tk.Button(self.root, text="保存", command=self.save_image)
         self.save_btn.pack(side=tk.LEFT)
         
-        self.color_btn = tk.Button(self.root, text="填色", command=self.fill)
+        self.color_btn = tk.Button(self.root, text="填色", command=self.toggle_fill_mode)
         self.color_btn.pack(side=tk.LEFT)
         
         self.color_btn = tk.Button(self.root, text="顏色", command=self.choose_color)
@@ -38,10 +45,57 @@ class PaintApp:
         
         self.clear_btn = tk.Button(self.root, text="清除", command=self.clear_canvas)
         self.clear_btn.pack(side=tk.LEFT)
+
+        self.clear_btn = tk.Button(self.root, text="Gaussian Blur", command=self.apply_gaussian_blur)
+        self.clear_btn.pack(side=tk.LEFT)
+
+        self.clear_btn = tk.Button(self.root, text="Canny", command=self.apply_canny)
+        self.clear_btn.pack(side=tk.LEFT)
+        
         
         self.size_slider = tk.Scale(self.root, from_=1, to=10, orient=tk.HORIZONTAL, label="大小", command=self.change_size)
         self.size_slider.pack(side=tk.LEFT)
         
+
+    def toggle_fill_mode(self):
+        self.is_pen = False
+        self.is_eraser = False
+        self.is_fill_mode = True
+        self.canvas.config(cursor="target")  # 更改鼠标样式
+        self.canvas.bind("<Button-1>", self.fill_color_at_click)  # 绑定填充功能
+
+
+    def fill_color_at_click(self, event):
+        if self.is_fill_mode:
+            x, y = event.x, event.y
+            fill_color = self.pen_color  # 或者是你想要的填充颜色
+            self.paint_bucket(x, y, fill_color)
+
+
+    def paint_bucket(self, x, y, fill_color):
+        target_color = self.canvas.itemcget(self.canvas.find_closest(x, y), "fill")
+
+        if target_color == fill_color:
+            return
+
+        stack = [(x, y)]
+
+        while stack:
+            current_x, current_y = stack.pop()
+
+            current_color = self.canvas.itemcget(self.canvas.find_closest(current_x, current_y), "fill")
+
+            if current_color == target_color:
+                self.canvas.itemconfig(self.canvas.find_closest(current_x, current_y), fill=fill_color)
+
+                stack.append((current_x + 1, current_y))  # Right
+                stack.append((current_x - 1, current_y))  # Left
+                stack.append((current_x, current_y + 1))  # Down
+                stack.append((current_x, current_y - 1))  # Up
+
+
+
+
     def draw(self, event):
         x1, y1 = (event.x - self.pen_size), (event.y - self.pen_size)
         x2, y2 = (event.x + self.pen_size), (event.y + self.pen_size)
@@ -51,10 +105,17 @@ class PaintApp:
             self.canvas.create_oval(x1, y1, x2, y2, fill="white", outline="white")
 
     def choose_pen(self):
+        self.canvas.config(cursor="pencil") 
+        self.is_pen = True
         self.is_eraser = False
+        self.is_fill_mode = False
+        self.is_fill_mode
         
     def choose_erase(self):
+        self.canvas.config(cursor="dot") 
+        self.is_pen = False
         self.is_eraser = True
+        self.is_fill_mode = False
         
     def choose_color(self):
         color = colorchooser.askcolor()[1]
@@ -78,18 +139,13 @@ class PaintApp:
         # 清除 Canvas 上的內容
         self.canvas.delete("all")
 
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        height, width, _ = image_rgb.shape
-        image_bytes = cv2.imencode('.png', image_rgb)[1].tobytes()
+        image_bytes = cv2.imencode('.png', image)[1].tobytes()
         self.image_tk = tk.PhotoImage(data=image_bytes)
 
-        # 將 Canvas 設置為與圖片大小相符
-        self.canvas.config(width=width, height=height)
         self.canvas.create_image(0, 0, anchor=tk.NW, image=self.image_tk)
 
         
-    def fill(self):
-        self.canvas.create_rectangle(0, 0, self.canvas.winfo_width(), self.canvas.winfo_height(), fill=self.pen_color)
+
             
     def clear_canvas(self):
         self.canvas.delete("all")
@@ -98,14 +154,44 @@ class PaintApp:
         self.pen_size = int(val)
 
     def get_canvas_image(self):
-        x0 = self.canvas.winfo_rootx() + self.canvas.winfo_x()
-        y0 = self.canvas.winfo_rooty() + self.canvas.winfo_y()
-        x1 = x0 + self.canvas.winfo_width()
-        y1 = y0 + self.canvas.winfo_height()
-        canvas_color = self.canvas.winfo_rgb(self.canvas.cget('bg'))
-        screenshot = np.array(canvas_color, dtype=np.uint8).reshape((1, 1, 3))
-        screenshot = np.repeat(screenshot, (y1 - y0) * (x1 - x0), axis=0).reshape((y1 - y0, x1 - x0, 3))
-        return screenshot
+        # 获取画布上的内容并转换为图像
+        canvas_image = self.canvas.postscript(colormode="color")
+        image = Image.open(io.BytesIO(canvas_image.encode("utf-8")))
+        image = np.array(image)
+
+        # 将图像从BGR格式转换为RGB格式
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        return image_rgb
+    
+    def apply_gaussian_blur(self, kernel_size=(5, 5)):
+        # 获取画布上的内容并转换为图像
+        canvas_image = self.get_canvas_image()
+
+        # 对图像应用高斯模糊
+        blurred_image = cv2.GaussianBlur(canvas_image, kernel_size, 0)
+
+        resized_blurred_image = cv2.resize(blurred_image, (self.canvas.winfo_width(), self.canvas.winfo_height()))
+
+        # 在画布上显示模糊后的图像
+        self.show_image(resized_blurred_image)
+
+    def apply_canny(self):
+        # 获取画布上的内容并转换为图像
+        canvas_image = self.get_canvas_image()
+
+        # 将图像从BGR格式转换为灰度图
+        gray_image = cv2.cvtColor(canvas_image, cv2.COLOR_BGR2GRAY)
+
+        # 对灰度图应用Canny边缘检测
+        edges = cv2.Canny(gray_image, 50, 150)  # 50和150是Canny算法中的低阈值和高阈值
+
+        resized_edges = cv2.resize(edges, (self.canvas.winfo_width(), self.canvas.winfo_height()))
+
+
+        self.show_image(resized_edges)
+
+
 
 
 if __name__ == "__main__":
