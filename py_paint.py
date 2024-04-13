@@ -30,7 +30,7 @@ class PaintApp:
         self.canvas.config(cursor="pencil") 
 
         self.pen_btn = tk.Button(self.root, text="筆", command=self.choose_pen)
-        self.pen_btn.pack(side=tk.LEFT)
+        self.pen_btn.pack(side=tk.LEFT,padx=(20, 0))
 
         self.erase_btn = tk.Button(self.root, text="橡皮擦", command=self.choose_erase)
         self.erase_btn.pack(side=tk.LEFT)
@@ -43,10 +43,10 @@ class PaintApp:
 
         self.size_slider = tk.Scale(self.root, from_=1, to=12, orient=tk.HORIZONTAL, label="大小", command=self.change_size)
         self.size_slider.set(2) 
-        self.size_slider.pack(side=tk.LEFT)
+        self.size_slider.pack(side=tk.LEFT,padx=(10,100))
 
         self.save_btn = tk.Button(self.root, text="保存", command=self.save_image)
-        self.save_btn.pack(side=tk.RIGHT)
+        self.save_btn.pack(side=tk.RIGHT,padx=(0, 20))
 
         self.load_btn = tk.Button(self.root, text="加載", command=self.load_image)
         self.load_btn.pack(side=tk.RIGHT)
