@@ -153,8 +153,7 @@ class PaintApp:
 
 
     def save_image(self):
-        filetypes = [('JPG', '*.jpg')]
-        file_path = filedialog.asksaveasfilename(filetypes=filetypes,defaultextension=".jpg")
+        file_path = filedialog.asksaveasfilename(filetypes=[('JPG', '*.jpg')],defaultextension=".jpg")
 
         if file_path:
             file_path = os.fsencode(file_path).decode('utf-8')
