@@ -16,10 +16,13 @@ class PaintApp:
         self.is_eraser = False
         self.is_fill_mode = False 
         
+        self.undo_stack = []  # 用于保存绘图历史记录
+        self.redo_stack = []  # 用于保存撤销的操作，以便撤销撤销（重做）
         
         self.canvas = tk.Canvas(self.root, bg="white", width=600, height=400)
         self.canvas.pack(fill=tk.BOTH, expand=True)
-        
+
+        self.canvas.bind("<Button-1>", self.on_press)
         self.canvas.bind("<B1-Motion>", self.draw)
         self.canvas.config(cursor="pencil") 
 
@@ -34,9 +37,12 @@ class PaintApp:
 
         self.load_btn = tk.Button(self.root, text="加載", command=self.load_image)
         self.load_btn.pack(side=tk.RIGHT)
+
+        self.undo_btn = tk.Button(self.root, text="撤銷", command=self.undo)
+        self.undo_btn.pack(side=tk.RIGHT)
         
-        self.color_btn = tk.Button(self.root, text="填色", command=self.toggle_fill_mode)
-        self.color_btn.pack(side=tk.LEFT)
+        self.fill_btn = tk.Button(self.root, text="填色", command=self.toggle_fill_mode)
+        self.fill_btn.pack(side=tk.LEFT)
         
         self.color_btn = tk.Button(self.root, text="顏色", command=self.choose_color)
         self.color_btn.pack(side=tk.LEFT)
@@ -44,17 +50,17 @@ class PaintApp:
         self.clear_btn = tk.Button(self.root, text="清除", command=self.clear_canvas)
         self.clear_btn.pack(side=tk.LEFT)
 
-        self.clear_btn = tk.Button(self.root, text="Gaussian Blur", command=self.apply_gaussian_blur)
-        self.clear_btn.pack(side=tk.LEFT)
+        self.gaussian_btn = tk.Button(self.root, text="Gaussian Blur", command=self.apply_gaussian_blur)
+        self.gaussian_btn.pack(side=tk.LEFT)
 
-        self.clear_btn = tk.Button(self.root, text="Canny", command=self.apply_canny)
-        self.clear_btn.pack(side=tk.LEFT)
+        self.canny_btn = tk.Button(self.root, text="Canny", command=self.apply_canny)
+        self.canny_btn.pack(side=tk.LEFT)
 
-        self.clear_btn = tk.Button(self.root, text="Sepia", command=self.apply_Speia)
-        self.clear_btn.pack(side=tk.LEFT)
+        self.Speia_btn = tk.Button(self.root, text="Sepia", command=self.apply_Speia)
+        self.Speia_btn.pack(side=tk.LEFT)
 
-        self.clear_btn = tk.Button(self.root, text="Emboss", command=self.apply_Emboss)
-        self.clear_btn.pack(side=tk.LEFT)
+        self.Emboss_btn = tk.Button(self.root, text="Emboss", command=self.apply_Emboss)
+        self.Emboss_btn.pack(side=tk.LEFT)
         
         
         self.size_slider = tk.Scale(self.root, from_=1, to=10, orient=tk.HORIZONTAL, label="大小", command=self.change_size)
@@ -75,9 +81,6 @@ class PaintApp:
             self.paint_bucket(x, y, fill_color)
             print("Mouse click coordinates (x, y):", x, y)
 
-
-
-
     def paint_bucket(self, x, y, fill_color):
         # 将画布内容转换为OpenCV格式
         canvas_image = self.get_canvas_image()
@@ -87,9 +90,6 @@ class PaintApp:
 
         # 将填充颜色转换为OpenCV格式
         new_fill_color = tuple(int(fill_color[i:i+2], 16) for i in (5, 3, 1))  
-
-        
-        
 
         # 确保种子点在图像范围内
         if 0 <= x < canvas_image.shape[1] and 0 <= y < canvas_image.shape[0]:
@@ -104,14 +104,12 @@ class PaintApp:
         lo_diff = up_diff = (0, 0, 0)
         # 执行泛洪填充算法
         _, filled_image, _, _ = cv2.floodFill(canvas_image, mask, seed_point, new_fill_color, lo_diff, up_diff)
+        
+        # 将当前画布状态保存到撤销栈中
+        self.undo_stack.append(self.get_canvas_image().copy())
+        
         # 显示填充后的图像
         self.show_image(filled_image)
-
-
-
-
-
-
 
     def draw(self, event):
         x1, y1 = (event.x - self.pen_size), (event.y - self.pen_size)
@@ -120,6 +118,11 @@ class PaintApp:
             self.canvas.create_oval(x1, y1, x2, y2, fill=self.pen_color, outline=self.pen_color)
         else:
             self.canvas.create_oval(x1, y1, x2, y2, fill="white", outline="white")
+
+    def on_press(self, event):
+        # 在鼠标按下前保存一次画布状态
+        self.undo_stack.append(self.get_canvas_image().copy())
+            
 
     def choose_pen(self):
         self.canvas.config(cursor="pencil") 
@@ -145,6 +148,7 @@ class PaintApp:
             image = cv2.imread(file_path)
             if image is not None:
                 self.show_image(image)
+                self.undo_stack.append(self.get_canvas_image().copy())
 
     def save_image(self):
         file_path = filedialog.asksaveasfilename(defaultextension=".jpg")
@@ -162,17 +166,17 @@ class PaintApp:
 
         # 在 Canvas 上显示图像
         self.canvas.create_image(0, 0, anchor=tk.NW, image=self.image_tk)
-
         
 
-            
     def clear_canvas(self):
         self.canvas.delete("all")
         
+        # 将当前画布状态保存到撤销栈中
+        self.undo_stack.append(self.get_canvas_image().copy())
+
     def change_size(self, val):
         self.pen_size = int(val)
   
-
     def get_canvas_image(self):
         # 获取画布左上角相对于程序窗口左上角的坐标
         canvas_x0 = 0  # 画布在程序窗口中的左上角 x 坐标
@@ -192,11 +196,9 @@ class PaintApp:
         # 将截图转换为 numpy 数组，并转换为 RGB 格式
         canvas_image = np.array(screenshot)
         canvas_image_rgb = cv2.cvtColor(canvas_image, cv2.COLOR_BGR2RGB)
+        
 
         return canvas_image_rgb
-
-
-
     
     def apply_gaussian_blur(self, kernel_size=(5, 5)):
         # 获取画布上的内容并转换为图像
@@ -209,6 +211,7 @@ class PaintApp:
 
         # 在画布上显示模糊后的图像
         self.show_image(resized_blurred_image)
+        self.undo_stack.append(self.get_canvas_image().copy())
 
     def apply_canny(self):
         # 获取画布上的内容并转换为图像
@@ -221,6 +224,7 @@ class PaintApp:
         edges = cv2.Canny(gray_image, 50, 150)  # 50和150是Canny算法中的低阈值和高阈值
 
         self.show_image(edges)
+        self.undo_stack.append(self.get_canvas_image().copy())
     
     def apply_Speia(self):
         canvas_image = self.get_canvas_image()
@@ -233,6 +237,7 @@ class PaintApp:
         sepia_image = cv2.transform(canvas_image, sepia_matrix)
 
         self.show_image(sepia_image)
+        self.undo_stack.append(self.get_canvas_image().copy())
 
     def apply_Emboss(self):
         canvas_image = self.get_canvas_image()
@@ -248,9 +253,16 @@ class PaintApp:
         emboss_image = cv2.filter2D(gray_image, -1, emboss_kernel)
 
         self.show_image(emboss_image)
+        self.undo_stack.append(self.get_canvas_image().copy())
 
-
-
+    def undo(self):
+        if self.undo_stack:
+            # 将当前画布状态保存到重做栈中
+            self.redo_stack.append(self.get_canvas_image().copy())
+            # 从撤销栈中弹出上一个画布状态
+            prev_canvas_image = self.undo_stack.pop()
+            # 在画布上显示上一个画布状态
+            self.show_image(prev_canvas_image)
 
 if __name__ == "__main__":
     root = tk.Tk()
