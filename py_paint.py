@@ -241,11 +241,12 @@ class PaintApp:
         gray_image = cv2.cvtColor(canvas_image, cv2.COLOR_BGR2GRAY)
 
         # EMBOSS效果
-        emboss_kernel = np.array([[0, -1, -1],
-                                [1, 0, -1],
-                                [1, 1, 0]])
-        
+        emboss_kernel = np.array([[-2., -1., 0.],
+                                  [-1., 1., 1.], 
+                                  [0., 1., 2.]])
+            
         emboss_image = cv2.filter2D(gray_image, -1, emboss_kernel)
+
 
         self.show_image(emboss_image)
         self.undo_stack.append(self.get_canvas_image().copy())
