@@ -40,10 +40,10 @@ class PaintApp:
         self.load_btn = tk.Button(self.root, text="加載", command=self.load_image)
         self.load_btn.pack(side=tk.RIGHT)
 
-        self.redo_btn = tk.Button(self.root, text="回復", command=self.redo)
+        self.redo_btn = tk.Button(self.root, text="取消復原", command=self.redo)
         self.redo_btn.pack(side=tk.RIGHT)
 
-        self.undo_btn = tk.Button(self.root, text="撤銷", command=self.undo)
+        self.undo_btn = tk.Button(self.root, text="復原", command=self.undo)
         self.undo_btn.pack(side=tk.RIGHT)
         
         self.fill_btn = tk.Button(self.root, text="填色", command=self.toggle_fill_mode)
