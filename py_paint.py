@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import colorchooser
 from tkinter import filedialog
+from tkinter import messagebox
 import cv2
 import os
 import numpy as np
@@ -147,6 +148,9 @@ class PaintApp:
             if image is not None:
                 self.show_image(image)
                 self.undo_stack.append(self.get_canvas_image().copy())
+            else:
+                messagebox.showinfo('警告', '無法開啟檔案')
+
 
     def save_image(self):
         file_path = filedialog.asksaveasfilename(defaultextension=".jpg")
