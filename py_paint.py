@@ -113,9 +113,9 @@ class PaintApp:
     def draw(self, event):
         x1, y1 = (event.x - self.pen_size), (event.y - self.pen_size)
         x2, y2 = (event.x + self.pen_size), (event.y + self.pen_size)
-        if not self.is_eraser:
+        if self.is_pen:
             self.canvas.create_oval(x1, y1, x2, y2, fill=self.pen_color, outline=self.pen_color)
-        else:
+        elif self.is_eraser:
             self.canvas.create_oval(x1, y1, x2, y2, fill="white", outline="white")
 
     def on_press(self, event):
