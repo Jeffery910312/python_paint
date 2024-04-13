@@ -94,15 +94,7 @@ class PaintApp:
         # 将填充颜色转换为OpenCV格式
         new_fill_color = tuple(int(fill_color[i:i+2], 16) for i in (5, 3, 1))  
 
-        # 确保种子点在图像范围内
-        if 0 <= x < canvas_image.shape[1] and 0 <= y < canvas_image.shape[0]:
-            # 如果鼠标点击坐标在图像范围内，直接使用该坐标作为种子点
-            seed_point = (x, y)
-        else:
-            # 如果鼠标点击坐标超出了图像范围，调整种子点的位置
-            adjusted_x = max(0, min(x, canvas_image.shape[1] - 1))
-            adjusted_y = max(0, min(y, canvas_image.shape[0] - 1))
-            seed_point = (adjusted_x, adjusted_y)
+        seed_point = (x, y)
 
         lo_diff = up_diff = (0, 0, 0)
         # 执行泛洪填充算法
