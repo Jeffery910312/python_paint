@@ -165,7 +165,7 @@ class PaintApp:
             canvas_image = self.get_canvas_image()
             cv2.imwrite(file_path, canvas_image)
 
-    def show_image(self, image):
+    def show_image(self, image): #RGB
         # 清除 Canvas 上的內容
         self.canvas.delete("all")
 
@@ -202,9 +202,9 @@ class PaintApp:
         # 截取画布区域的截图
         screenshot = pyautogui.screenshot(region=(x0, y0, canvas_width, canvas_height))
 
-        # 将截图转换为 numpy 数组，并转换为 RGB 格式
+        # 将截图转换为 numpy(RGB) 数组，并转换为 OpenCV(BGR) 格式
         canvas_image = np.array(screenshot)
-        canvas_image_rgb = cv2.cvtColor(canvas_image, cv2.COLOR_BGR2RGB)
+        canvas_image_rgb = cv2.cvtColor(canvas_image, cv2.COLOR_RGB2BGR)
         
 
         return canvas_image_rgb
@@ -216,10 +216,9 @@ class PaintApp:
         # 对图像应用高斯模糊
         blurred_image = cv2.GaussianBlur(canvas_image, kernel_size, 0)
 
-        resized_blurred_image = cv2.resize(blurred_image, (self.canvas.winfo_width(), self.canvas.winfo_height()))
 
         # 在画布上显示模糊后的图像
-        self.show_image(resized_blurred_image)
+        self.show_image(blurred_image)
         self.undo_stack.append(self.get_canvas_image().copy())
 
     def apply_canny(self):
