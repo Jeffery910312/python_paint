@@ -19,7 +19,7 @@ class PaintApp:
         self.undo_stack = []  # 用于保存绘图历史记录
         self.redo_stack = []  # 用于保存撤销的操作，以便撤销撤销（重做）
         
-        self.canvas = tk.Canvas(self.root, bg="white", width=600, height=400)
+        self.canvas = tk.Canvas(self.root, bg="white", width=800, height=600)
         self.canvas.pack(fill=tk.BOTH, expand=True)
 
         self.canvas.bind("<Button-1>", self.on_press)
