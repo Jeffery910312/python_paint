@@ -101,7 +101,7 @@ class PaintApp:
 
         seed_point = (x, y)
 
-        lo_diff = up_diff = (0, 0, 0)
+        lo_diff = up_diff = (5, 5, 5)
         # 执行泛洪填充算法
         _, filled_image, _, _ = cv2.floodFill(canvas_image, mask, seed_point, new_fill_color, lo_diff, up_diff)
         
