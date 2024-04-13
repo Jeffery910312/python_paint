@@ -162,12 +162,12 @@ class PaintApp:
         defaultextension=".jpg",
 
         file_path = filedialog.asksaveasfilename(title='保存圖片', filetypes=filetypes, defaultextension=defaultextension)
-        print(file_path)
 
         if file_path:
             file_path = os.fsencode(file_path).decode('utf-8')
             canvas_image = self.get_canvas_image()
             cv2.imwrite(file_path, canvas_image)
+
 
     def show_image(self, image): #RGB
         # 清除 Canvas 上的內容
