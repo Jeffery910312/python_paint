@@ -20,8 +20,9 @@ class PaintApp:
         
         self.undo_stack = []  # 用于保存绘图历史记录
         self.redo_stack = []  # 用于保存撤销的操作，以便撤销撤销（重做）
+        self.max_history_length = 10
         
-        self.canvas = tk.Canvas(self.root, bg="white", width=800, height=600)
+        self.canvas = tk.Canvas(self.root, bg="white", width=1200, height=600)
         self.canvas.pack(fill=tk.BOTH, expand=True)
 
         self.canvas.bind("<Button-1>", self.on_press)
@@ -33,6 +34,15 @@ class PaintApp:
 
         self.erase_btn = tk.Button(self.root, text="橡皮擦", command=self.choose_erase)
         self.erase_btn.pack(side=tk.LEFT)
+
+        self.fill_btn = tk.Button(self.root, text="填色", command=self.toggle_fill_mode)
+        self.fill_btn.pack(side=tk.LEFT)
+        
+        self.color_btn = tk.Button(self.root, text="顏色", command=self.choose_color)
+        self.color_btn.pack(side=tk.LEFT)
+
+        self.size_slider = tk.Scale(self.root, from_=1, to=10, orient=tk.HORIZONTAL, label="大小", command=self.change_size)
+        self.size_slider.pack(side=tk.LEFT)
 
         self.save_btn = tk.Button(self.root, text="保存", command=self.save_image)
         self.save_btn.pack(side=tk.RIGHT)
@@ -46,14 +56,8 @@ class PaintApp:
         self.undo_btn = tk.Button(self.root, text="復原", command=self.undo)
         self.undo_btn.pack(side=tk.RIGHT)
         
-        self.fill_btn = tk.Button(self.root, text="填色", command=self.toggle_fill_mode)
-        self.fill_btn.pack(side=tk.LEFT)
-        
-        self.color_btn = tk.Button(self.root, text="顏色", command=self.choose_color)
-        self.color_btn.pack(side=tk.LEFT)
-        
         self.clear_btn = tk.Button(self.root, text="清除", command=self.clear_canvas)
-        self.clear_btn.pack(side=tk.LEFT)
+        self.clear_btn.pack(side=tk.RIGHT)
 
         self.gaussian_btn = tk.Button(self.root, text="Gaussian Blur", command=self.apply_gaussian_blur)
         self.gaussian_btn.pack(side=tk.LEFT)
@@ -68,8 +72,6 @@ class PaintApp:
         self.Emboss_btn.pack(side=tk.LEFT)
         
         
-        self.size_slider = tk.Scale(self.root, from_=1, to=10, orient=tk.HORIZONTAL, label="大小", command=self.change_size)
-        self.size_slider.pack(side=tk.LEFT)
         
 
     def toggle_fill_mode(self):
@@ -260,23 +262,39 @@ class PaintApp:
         self.show_image(emboss_image)
         self.undo_stack.append(self.get_canvas_image().copy())
 
+    def add_to_undo_stack(self, item):
+        self.undo_stack.append(item)
+        # 如果操作历史记录的长度超过限制，则删除最旧的条目
+        if len(self.undo_stack) > self.max_history_length:
+            self.undo_stack.pop(0)
+
+    def add_to_redo_stack(self, item):
+        self.redo_stack.append(item)
+        # 如果操作历史记录的长度超过限制，则删除最旧的条目
+        if len(self.redo_stack) > self.max_history_length:
+            self.redo_stack.pop(0)
+
     def undo(self):
         if self.undo_stack:
             # 将当前画布状态保存到重做栈中
-            self.redo_stack.append(self.get_canvas_image().copy())
+            self.add_to_redo_stack(self.get_canvas_image().copy())
             # 从撤销栈中弹出上一个画布状态
             prev_canvas_image = self.undo_stack.pop()
             # 在画布上显示上一个画布状态
             self.show_image(prev_canvas_image)
+        else:
+            messagebox.showinfo('提示', '無法執行撤銷操作，沒有可用的歷史記錄')
 
     def redo(self):
         if self.redo_stack:
-            # 将当前画布状态保存到重做栈中
-            self.undo_stack.append(self.get_canvas_image().copy())
-            # 从撤销栈中弹出上一个画布状态
+            # 将当前画布状态保存到撤销栈中
+            self.add_to_undo_stack(self.get_canvas_image().copy())
+            # 从重做栈中弹出上一个画布状态
             prev_canvas_image = self.redo_stack.pop()
             # 在画布上显示上一个画布状态
             self.show_image(prev_canvas_image)
+        else:
+            messagebox.showinfo('提示', '無法執行撤銷操作，沒有可用的歷史記錄')
 
 if __name__ == "__main__":
     root = tk.Tk()
