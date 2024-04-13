@@ -129,6 +129,7 @@ class PaintApp:
         self.is_pen = True
         self.is_eraser = False
         self.is_fill_mode = False
+        self.canvas.bind("<Button-1>", self.on_press)
 
         
     def choose_erase(self):
@@ -136,6 +137,7 @@ class PaintApp:
         self.is_pen = False
         self.is_eraser = True
         self.is_fill_mode = False
+        self.canvas.bind("<Button-1>", self.on_press)
         
     def choose_color(self):
         color = colorchooser.askcolor()[1]
