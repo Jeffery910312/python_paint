@@ -225,9 +225,9 @@ class PaintApp:
         canvas_image = self.get_canvas_image()
 
         # SEPIA效果
-        sepia_matrix = np.array([[0.393, 0.769, 0.189],
-                                [0.349, 0.686, 0.168],
-                                [0.272, 0.534, 0.131]])
+        sepia_matrix = np.array([[0.272, 0.534, 0.131],
+                                [ 0.349, 0.686, 0.168],
+                                [ 0.393, 0.769, 0.189]])
         
         sepia_image = cv2.transform(canvas_image, sepia_matrix)
 
@@ -242,8 +242,8 @@ class PaintApp:
 
         # EMBOSS效果
         emboss_kernel = np.array([[-2., -1., 0.],
-                                  [-1., 1., 1.], 
-                                  [0., 1., 2.]])
+                                  [-1., 1., 1. ], 
+                                  [ 0., 1., 2. ]])
             
         emboss_image = cv2.filter2D(gray_image, -1, emboss_kernel)
 
