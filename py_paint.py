@@ -145,7 +145,7 @@ class PaintApp:
             self.pen_color = color
 
     def load_image(self):
-        file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg;*.jpeg;*.png;*.bmp")])
+        file_path = filedialog.askopenfilename(title='加載圖片',filetypes=[("Image files", "*.jpg;*.jpeg;*.png")])
         if file_path:
             # 处理中文路径
             file_path = os.fsencode(file_path).decode('utf-8')
@@ -158,7 +158,11 @@ class PaintApp:
 
 
     def save_image(self):
-        file_path = filedialog.asksaveasfilename(filetypes=[('JPG', '*.jpg')],defaultextension=".jpg")
+        filetypes = [("JPG files", "*.jpg"),("PNG files", "*.png")]
+        defaultextension=".jpg",
+
+        file_path = filedialog.asksaveasfilename(title='保存圖片', filetypes=filetypes, defaultextension=defaultextension)
+        print(file_path)
 
         if file_path:
             file_path = os.fsencode(file_path).decode('utf-8')
