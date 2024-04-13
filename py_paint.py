@@ -120,7 +120,6 @@ class PaintApp:
             self.canvas.create_oval(x1, y1, x2, y2, fill="white", outline="white")
 
     def on_press(self, event):
-        # 在鼠标按下前保存一次画布状态
         self.undo_stack.append(self.get_canvas_image().copy())
             
 
