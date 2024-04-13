@@ -154,7 +154,7 @@ class PaintApp:
                 self.show_image(image)
                 self.undo_stack.append(self.get_canvas_image().copy())
             else:
-                messagebox.showinfo('警告', '無法開啟檔案')
+                messagebox.showwarning('警告', '無法開啟檔案')
 
 
     def save_image(self):
@@ -167,6 +167,7 @@ class PaintApp:
             file_path = os.fsencode(file_path).decode('utf-8')
             canvas_image = self.get_canvas_image()
             cv2.imwrite(file_path, canvas_image)
+            messagebox.showinfo('通知', '保存成功')
 
 
     def show_image(self, image): #RGB
