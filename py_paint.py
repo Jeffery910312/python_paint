@@ -153,8 +153,9 @@ class PaintApp:
 
 
     def save_image(self):
-        file_path = filedialog.asksaveasfilename(defaultextension=".jpg")
+        file_path = filedialog.asksaveasfilename(filetypes = [('jpg', '.jpg'),('png', '.png'),('Bitmap', '.bmp')])
         if file_path:
+            file_path = file_path.encode('utf-8').decode('utf-8')
             canvas_image = self.get_canvas_image()
             cv2.imwrite(file_path, canvas_image)
 
