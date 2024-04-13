@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import colorchooser
 from tkinter import filedialog
 import cv2
+import os
 import numpy as np
 import pyautogui
 
@@ -138,8 +139,10 @@ class PaintApp:
             self.pen_color = color
 
     def load_image(self):
-        file_path = filedialog.askopenfilename()
+        file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg;*.jpeg;*.png;*.bmp")])
         if file_path:
+            # 处理中文路径
+            file_path = os.fsencode(file_path).decode('utf-8')
             image = cv2.imread(file_path)
             if image is not None:
                 self.show_image(image)
