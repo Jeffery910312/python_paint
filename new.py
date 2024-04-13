@@ -38,6 +38,9 @@ class PaintApp:
         self.load_btn = tk.Button(self.root, text="加載", command=self.load_image)
         self.load_btn.pack(side=tk.RIGHT)
 
+        self.redo_btn = tk.Button(self.root, text="回復", command=self.redo)
+        self.redo_btn.pack(side=tk.RIGHT)
+
         self.undo_btn = tk.Button(self.root, text="撤銷", command=self.undo)
         self.undo_btn.pack(side=tk.RIGHT)
         
@@ -261,6 +264,15 @@ class PaintApp:
             self.redo_stack.append(self.get_canvas_image().copy())
             # 从撤销栈中弹出上一个画布状态
             prev_canvas_image = self.undo_stack.pop()
+            # 在画布上显示上一个画布状态
+            self.show_image(prev_canvas_image)
+
+    def redo(self):
+        if self.redo_stack:
+            # 将当前画布状态保存到重做栈中
+            self.undo_stack.append(self.get_canvas_image().copy())
+            # 从撤销栈中弹出上一个画布状态
+            prev_canvas_image = self.redo_stack.pop()
             # 在画布上显示上一个画布状态
             self.show_image(prev_canvas_image)
 
