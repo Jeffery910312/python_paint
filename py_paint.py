@@ -41,7 +41,8 @@ class PaintApp:
         self.color_btn = tk.Button(self.root, text="顏色", command=self.choose_color)
         self.color_btn.pack(side=tk.LEFT)
 
-        self.size_slider = tk.Scale(self.root, from_=1, to=10, orient=tk.HORIZONTAL, label="大小", command=self.change_size)
+        self.size_slider = tk.Scale(self.root, from_=1, to=12, orient=tk.HORIZONTAL, label="大小", command=self.change_size)
+        self.size_slider.set(2) 
         self.size_slider.pack(side=tk.LEFT)
 
         self.save_btn = tk.Button(self.root, text="保存", command=self.save_image)
