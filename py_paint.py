@@ -289,7 +289,7 @@ class PaintApp:
             # 在画布上显示上一个画布状态
             self.show_image(prev_canvas_image)
         else:
-            messagebox.showinfo('提示', '無法執行撤銷操作，沒有可用的歷史記錄')
+            messagebox.showinfo('提示', '無法執行操作，沒有可用的歷史記錄')
 
     def redo(self):
         if self.redo_stack:
@@ -300,7 +300,7 @@ class PaintApp:
             # 在画布上显示上一个画布状态
             self.show_image(prev_canvas_image)
         else:
-            messagebox.showinfo('提示', '無法執行撤銷操作，沒有可用的歷史記錄')
+            messagebox.showinfo('提示', '無法執行操作，沒有可用的歷史記錄')
 
 if __name__ == "__main__":
     root = tk.Tk()
